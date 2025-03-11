@@ -43,6 +43,16 @@ public class NetworkManager : MonoBehaviour
             {
                 Debug.Log($"Socket Exception while in listen : {e.Message}");
             }
+
+            if (_serverSocket != null && _isBound)
+            {
+                _serverListeningSocket = _serverSocket.Accept();
+                IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
+                Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
+
+                _serverListeningSocket.Shutdown(SocketShutdown.Both);
+                _serverListeningSocket.Dispose();
+            }
         }
     }
 
@@ -107,17 +117,4 @@ public class NetworkManager : MonoBehaviour
         return _serverSocket.IsBound == true;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (_serverSocket != null && _isBound)
-        {
-            _serverListeningSocket = _serverSocket.Accept();
-            IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
-            Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
-
-            _serverListeningSocket.Shutdown(SocketShutdown.Both);
-            _serverListeningSocket.Dispose();
-        }
-    }
 }
