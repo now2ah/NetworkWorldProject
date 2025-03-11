@@ -19,6 +19,30 @@ public class NetworkManager : MonoBehaviour
 
     bool _isBound;
 
+    public void StartServer()
+    {
+        if (InitializeServer(NetworkType.TCP) && _localEndPoint != null)
+        {
+            if (_Bind(_localEndPoint))
+            {
+                _isBound = true;
+            }
+            else
+            {
+                Debug.Log("Server socket isn't bound to local end point");
+            }
+
+            try
+            {
+                _serverSocket.Listen(5);
+            }
+            catch (SocketException e)
+            {
+                Debug.Log($"Socket Exception while in listen : {e.Message}");
+            }
+        }
+    }
+
     public bool InitializeServer(NetworkType type)
     {
         _localHostName = Dns.GetHostName();
@@ -50,37 +74,14 @@ public class NetworkManager : MonoBehaviour
         return _serverSocket.IsBound == true;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        if (InitializeServer(NetworkType.TCP) && _localEndPoint != null)
-        {
-            if (_Bind(_localEndPoint))
-            {
-                _isBound = true;
-            }
-            else
-            {
-                Debug.Log("Server socket isn't bound to local end point");
-            }
-
-            try
-            {
-                _serverSocket.Listen(5);
-            }
-            catch (SocketException e)
-            {
-                Debug.Log($"Socket Exception while in listen : {e.Message}");
-            }
-        }
-    }
-
     // Update is called once per frame
     void Update()
     {
-        if (_isBound)
+        if (_serverSocket != null && _isBound)
         {
             _clientSocket = _serverSocket.Accept();
+            IPEndPoint clientEndpoint = _clientSocket.LocalEndPoint as IPEndPoint;
+            Debug.Log($"Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
         }
     }
 }
