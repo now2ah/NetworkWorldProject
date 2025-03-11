@@ -113,7 +113,7 @@ public class NetworkManager : MonoBehaviour
         if (_serverSocket != null && _isBound)
         {
             _serverListeningSocket = _serverSocket.Accept();
-            IPEndPoint clientEndpoint = _serverListeningSocket.LocalEndPoint as IPEndPoint;
+            IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
             Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
 
             _serverListeningSocket.Shutdown(SocketShutdown.Both);
