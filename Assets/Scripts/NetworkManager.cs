@@ -1,9 +1,14 @@
 using UnityEngine;
 using System.Net.Sockets;
 using System.Net;
+using System.Text;
+
+
 
 public class NetworkManager : MonoBehaviour
 {
+    static int MAX_MESSAGE_BUFFER_SIZE = 1024;
+
     public enum NetworkType
     {
         TCP,
@@ -46,12 +51,24 @@ public class NetworkManager : MonoBehaviour
 
             if (_serverSocket != null && _isBound)
             {
-                _serverListeningSocket = _serverSocket.Accept();
-                IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
-                Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
+                //while(true)
+                {
+                    _serverListeningSocket = _serverSocket.Accept();
+                    IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
+                    Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
 
-                _serverListeningSocket.Shutdown(SocketShutdown.Both);
-                _serverListeningSocket.Dispose();
+                    byte[] recvBuffer = new byte[MAX_MESSAGE_BUFFER_SIZE]; //1024
+                    int recvByteSize = _serverListeningSocket.Receive(recvBuffer);
+                    string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
+
+                    Debug.Log($"{clientEndpoint.Address} : {recvString}");
+
+                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Server Received your message");
+                    _serverListeningSocket.Send(sendBuffer);
+
+                    _serverListeningSocket.Shutdown(SocketShutdown.Both);
+                    _serverListeningSocket.Dispose();
+                }
             }
         }
     }
@@ -62,6 +79,18 @@ public class NetworkManager : MonoBehaviour
         {
             _clientSocket.Connect(_localEndPoint);
             Debug.Log($"Connected to Server : {_localEndPoint.Address}, port number : {_localEndPoint.Port}");
+
+            byte[] sendBuffer = Encoding.UTF8.GetBytes("Hi! I am client.");
+            int sendByteSize = _clientSocket.Send(sendBuffer);
+
+            byte[] recvBuffer = new byte[MAX_MESSAGE_BUFFER_SIZE];
+            int recvByteSize = _clientSocket.Receive(recvBuffer);
+            string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
+
+            Debug.Log($"From Server : {recvString}");
+
+            _clientSocket.Shutdown(SocketShutdown.Both);
+            _clientSocket.Close();
         }
     }
 
