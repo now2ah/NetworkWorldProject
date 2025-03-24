@@ -29,14 +29,31 @@ public class Server : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        if (_clientsSocketList.Count > 0)
+        {
+            foreach (var client in _clientsSocketList)
+            {
+                client.Close();
+            }
+        }
+
+        if (_listeningSocket != null)
+        {
+            _listeningSocket.Close();
+        }
+    }
+
     public bool Initialize()
     {
         _localHostName = Dns.GetHostName();
         IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
         _localIPAddress = ipHostEntry.AddressList[0];       //need to add multi address
-        _localEndPoint = new IPEndPoint(_localIPAddress, Defines.PORT);
+        _localEndPoint = new IPEndPoint(IPAddress.Any, Defines.PORT);
 
         _clientsSocketList = new List<Socket>();
+        _checkReadList = new List<Socket>();
 
         _listeningSocket = _CreateServerSocket();
 
@@ -45,7 +62,7 @@ public class Server : MonoBehaviour
 
     public void Bind()
     {
-        if (null == _localEndPoint) { _isBind = _Bind(_localEndPoint); }
+        if (null != _localEndPoint) { _isBind = _Bind(_localEndPoint); }
     }
 
     public void Listen(int backlog)
@@ -95,7 +112,7 @@ public class Server : MonoBehaviour
 
     bool _PollingSocketList(List<Socket> clientSocketList)
     {
-        if (_checkReadList.Count > 0)
+        if (clientSocketList.Count > 0)
         {
             _checkReadList = new List<Socket>(clientSocketList);
 
@@ -106,10 +123,24 @@ public class Server : MonoBehaviour
 
             foreach (var checkedSocket in _checkReadList)
             {
+                if (checkedSocket == _listeningSocket)
+                {
+                    Socket clientSocket = checkedSocket.Accept();
+                    _clientsSocketList.Add(clientSocket);
+                }
+                else
+                {
+                    Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
+                    int receiveSize = checkedSocket.Receive(packet.PacketBuffer);
 
+                    if (receiveSize > 0)
+                    {
+                        string message = packet.ReadPacket();
+                        Debug.Log(message);
+                    }
+                }
             }
         }
         return true;
     }
-
 }

@@ -9,9 +9,10 @@ using System.Collections.Generic;
 public class NetworkManager : MonoBehaviour
 {
     Server _server;
+    Client _client;
     int backlog = 5;
 
-    #region OLD Version Values
+    #region OLD Version Variables
     public enum NetworkType
     {
         TCP,
@@ -38,16 +39,36 @@ public class NetworkManager : MonoBehaviour
     public void CreateRoom()
     {
         _StartServer();
+    }
 
+    public void JoinRoom()
+    {
+        _StartClient();
+    }
+
+    public void SendTest()
+    {
+        if (_client != null)
+        {
+            _client.Send("Fuck YES This is Test Messsage!!");
+        }
     }
 
     void _StartServer()
     {
-        _server = new Server();
+        _server = gameObject.AddComponent<Server>();
         _server.Initialize();
         _server.Bind();
         _server.Listen(backlog);
     }
+
+    void _StartClient()
+    {
+        _client = gameObject.AddComponent<Client>();
+        _client.StartClient();
+    }
+
+    
 
     #region OLD Version
     public void StartServer()
