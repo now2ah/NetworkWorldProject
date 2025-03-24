@@ -2,13 +2,16 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using System.Collections.Generic;
 
 
 
 public class NetworkManager : MonoBehaviour
 {
-    static int MAX_MESSAGE_BUFFER_SIZE = 1024;
+    Server _server;
+    int backlog = 5;
 
+    #region OLD Version Values
     public enum NetworkType
     {
         TCP,
@@ -25,7 +28,28 @@ public class NetworkManager : MonoBehaviour
     IPEndPoint _localEndPoint;
 
     bool _isBound;
+    #endregion
 
+    private void Update()
+    {
+
+    }
+
+    public void CreateRoom()
+    {
+        _StartServer();
+
+    }
+
+    void _StartServer()
+    {
+        _server = new Server();
+        _server.Initialize();
+        _server.Bind();
+        _server.Listen(backlog);
+    }
+
+    #region OLD Version
     public void StartServer()
     {
         if (InitializeServer(NetworkType.TCP) && _localEndPoint != null)
@@ -57,7 +81,7 @@ public class NetworkManager : MonoBehaviour
                     IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
                     Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
 
-                    byte[] recvBuffer = new byte[MAX_MESSAGE_BUFFER_SIZE]; //1024
+                    byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE]; //1024
                     int recvByteSize = _serverListeningSocket.Receive(recvBuffer);
                     string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
 
@@ -83,7 +107,7 @@ public class NetworkManager : MonoBehaviour
             byte[] sendBuffer = Encoding.UTF8.GetBytes("Hi! I am client.");
             int sendByteSize = _clientSocket.Send(sendBuffer);
 
-            byte[] recvBuffer = new byte[MAX_MESSAGE_BUFFER_SIZE];
+            byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE];
             int recvByteSize = _clientSocket.Receive(recvBuffer);
             string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
 
@@ -102,7 +126,7 @@ public class NetworkManager : MonoBehaviour
         _localEndPoint = new IPEndPoint(_ipAddress, 7890);
 
         Debug.Log($"Loading local Host name and Address : {_localHostName} , {_ipAddress}");
-        
+
         if (type == NetworkType.TCP)
         {
             _serverSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -145,5 +169,6 @@ public class NetworkManager : MonoBehaviour
 
         return _serverSocket.IsBound == true;
     }
-
 }
+
+#endregion
