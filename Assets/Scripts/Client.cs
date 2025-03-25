@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -7,15 +9,34 @@ public class Client : MonoBehaviour
     string _remoteAddress;
     Socket _socket;
 
+    public event EventHandler OnClientConnected;
+    public event EventHandler<string> OnReceiveMessage;
+
+    private void Update()
+    {
+        if (_socket != null & _socket.Connected)
+        {
+            _PollingSocket();
+        }
+    }
+
     private void OnDisable()
     {
+        if (OnClientConnected != null)
+        {
+            foreach (EventHandler invocation in OnClientConnected.GetInvocationList())
+            {
+                OnClientConnected -= invocation;
+            }
+        }
+
         if ( _socket != null )
         {
             _socket.Close();
         }
     }
 
-    public void StartClient(string address = null)
+    public bool StartClient(string address = null)
     {
         IPEndPoint endPoint = null;
         if (null == address)
@@ -30,6 +51,21 @@ public class Client : MonoBehaviour
         _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         _socket.Connect(endPoint);
+
+        if (_socket.Connected)
+        {
+            OnClientConnected.Invoke(this, EventArgs.Empty);
+        }
+
+        return _socket.Connected;
+    }
+
+    public void SubscribeChatEvent(ChatManager chatManager)
+    {
+        if (chatManager != null)
+        {
+            chatManager.OnSendButtonClicked += _OnSendButtonClicked;
+        }
     }
 
     public void Send(string message)
@@ -40,5 +76,34 @@ public class Client : MonoBehaviour
             packet.CreatePacket(message);
             _socket.Send(packet.PacketBuffer);
         }
+    }
+
+    void _OnSendButtonClicked(object sender, string message)
+    {
+        Send(message);
+    }
+
+    bool _PollingSocket()
+    {
+        if (null == _socket)
+            return false;
+
+        List<Socket> socket = new List<Socket>();
+        socket.Add(_socket);
+
+        Socket.Select(socket, null, null, 10);
+
+        foreach (var checkedSocket in socket)
+        {
+            Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
+            int receiveSize = checkedSocket.Receive(packet.PacketBuffer);
+
+            if (receiveSize > 0)
+            {
+                string message = packet.ReadPacket();
+                OnReceiveMessage.Invoke(this, message);
+            }
+        }
+        return true;
     }
 }

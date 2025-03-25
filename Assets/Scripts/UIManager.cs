@@ -21,11 +21,19 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SubscribeEvent()
+    public void SubscribeServerEvent()
     {
         if (networkManager != null && networkManager.Server != null)
         {
             networkManager.Server.OnServerCreated += _OnServerCreated;
+        }
+    }
+
+    public void SubscribeClientEvent(Client client)
+    {
+        if (networkManager != null && client != null)
+        {
+            client.OnClientConnected += _OnClientConnected;
         }
     }
 
@@ -39,7 +47,7 @@ public class UIManager : MonoBehaviour
         {
             if (networkManager != null)
             {
-                networkManager.StartServer();
+                networkManager.CreateRoom();
             }
         }
     }
@@ -54,12 +62,20 @@ public class UIManager : MonoBehaviour
         {
             if (networkManager != null)
             {
-                networkManager.StartClient();
+                networkManager.JoinRoom();
             }
         }
     }
 
     void _OnServerCreated(object sender, EventArgs e)
+    {
+        if (chatPanel != null)
+        {
+            _LoadPanel(chatPanel);
+        }
+    }
+
+    void _OnClientConnected(object sender, EventArgs e)
     {
         if (chatPanel != null)
         {

@@ -19,6 +19,7 @@ public class Server : MonoBehaviour
     public int backlog;
 
     public event EventHandler OnServerCreated;
+    public event EventHandler<string> OnReceiveMessage;
 
     public IPEndPoint IPEndPoint => _localEndPoint;
     public bool IsBind => _isBind;
@@ -34,6 +35,14 @@ public class Server : MonoBehaviour
 
     private void OnDisable()
     {
+        if (OnServerCreated != null)
+        {
+            foreach(EventHandler invocation in OnServerCreated.GetInvocationList())
+            {
+                OnServerCreated -= invocation;
+            }
+        }
+
         if (_clientsSocketList.Count > 0)
         {
             foreach (var client in _clientsSocketList)
@@ -44,6 +53,7 @@ public class Server : MonoBehaviour
 
         if (_listeningSocket != null)
         {
+            _listeningSocket.Shutdown(SocketShutdown.Both);
             _listeningSocket.Close();
         }
     }
@@ -87,6 +97,14 @@ public class Server : MonoBehaviour
         catch (SocketException e)
         {
             Debug.LogError(e.Message);
+        }
+    }
+
+    public void SubscribeChatEvent(ChatManager chatManager)
+    {
+        if (chatManager != null)
+        {
+            chatManager.OnSendButtonClicked += _OnSendButtonClicked;
         }
     }
 
@@ -141,11 +159,33 @@ public class Server : MonoBehaviour
                     if (receiveSize > 0)
                     {
                         string message = packet.ReadPacket();
-                        Debug.Log(message);
+                        OnReceiveMessage.Invoke(this, message);
                     }
                 }
             }
         }
         return true;
+    }
+
+    public void Send(string message)
+    {
+        if (_clientsSocketList.Count > 0)
+        {
+            Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
+            packet.CreatePacket(message);
+
+            foreach(var socket in _clientsSocketList)
+            {
+                if (socket == _listeningSocket)
+                    continue;
+
+                socket.Send(packet.PacketBuffer);
+            }
+        }
+    }
+
+    void _OnSendButtonClicked(object sender, string message)
+    {
+        Send(message);
     }
 }

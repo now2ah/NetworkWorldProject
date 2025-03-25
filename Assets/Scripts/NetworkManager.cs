@@ -3,13 +3,17 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 
 
 
 public class NetworkManager : MonoBehaviour
 {
+    public UIManager _uiManager;
+    public ChatManager _chatManager;
+
     Server _server;
-    Client _client;
+    List<Client> _clientList;
     int backlog = 5;
 
     public Server Server => _server;
@@ -33,9 +37,9 @@ public class NetworkManager : MonoBehaviour
     bool _isBound;
     #endregion
 
-    private void Update()
+    private void Awake()
     {
-
+        _clientList = new List<Client>();
     }
 
     public void CreateRoom()
@@ -48,26 +52,32 @@ public class NetworkManager : MonoBehaviour
         _StartClient();
     }
 
-    public void SendTest()
-    {
-        if (_client != null)
-        {
-            _client.Send("Fuck YES This is Test Messsage!!");
-        }
-    }
-
     void _StartServer()
     {
         _server = gameObject.AddComponent<Server>();
+        _uiManager.SubscribeServerEvent();
+        _chatManager.SubscribeServerEvent();
         _server.Initialize();
         _server.Bind();
         _server.Listen(backlog);
+        _server.SubscribeChatEvent(_chatManager);
     }
 
     void _StartClient()
     {
-        _client = gameObject.AddComponent<Client>();
-        _client.StartClient();
+        if (_clientList != null && _clientList.Count <= Defines.MAX_CONNECTED_CLIENT_SIZE)
+        {
+            Client client = gameObject.AddComponent<Client>();
+            _uiManager.SubscribeClientEvent(client);
+            _chatManager.SubscribeClientEvent(client);
+            if (client.StartClient())
+            {
+                _clientList.Add(client);
+                client.SubscribeChatEvent(_chatManager);
+                client.Send("Client is entered chat room");
+                _chatManager.WriteMessage("Client is entered chat room");
+            }
+        }
     }
 
     
