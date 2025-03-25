@@ -20,6 +20,7 @@ public class Server : MonoBehaviour
 
     public event EventHandler OnServerCreated;
     public event EventHandler<string> OnReceiveMessage;
+    public event EventHandler<string> OnSendMessage;
 
     public IPEndPoint IPEndPoint => _localEndPoint;
     public bool IsBind => _isBind;
@@ -160,6 +161,7 @@ public class Server : MonoBehaviour
                     {
                         string message = packet.ReadPacket();
                         OnReceiveMessage.Invoke(this, message);
+                        Send(message);
                     }
                 }
             }
@@ -187,5 +189,6 @@ public class Server : MonoBehaviour
     void _OnSendButtonClicked(object sender, string message)
     {
         Send(message);
+        OnSendMessage.Invoke(this, message);
     }
 }

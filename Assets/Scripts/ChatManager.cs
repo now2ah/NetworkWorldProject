@@ -47,6 +47,7 @@ public class ChatManager : MonoBehaviour
         {
             networkManager.Server.OnServerCreated += _OnServerCreated;
             networkManager.Server.OnReceiveMessage += _OnReceiveMessage;
+            networkManager.Server.OnSendMessage += _OnSendMessage;
         }
     }
 
@@ -63,7 +64,7 @@ public class ChatManager : MonoBehaviour
     {
         if (inputText != null)
         {
-            WriteMessage(inputText.text);
+            //WriteMessage(inputText.text);
             OnSendButtonClicked.Invoke(this, inputText.text);
             inputText.text = "";
         }
@@ -75,6 +76,11 @@ public class ChatManager : MonoBehaviour
     }
 
     void _OnReceiveMessage(object sender, string message)
+    {
+        WriteMessage(message);
+    }
+
+    void _OnSendMessage(object sender, string message)
     {
         WriteMessage(message);
     }
