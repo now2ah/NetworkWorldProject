@@ -12,6 +12,8 @@ public class NetworkManager : MonoBehaviour
     Client _client;
     int backlog = 5;
 
+    public Server Server => _server;
+
     #region OLD Version Variables
     public enum NetworkType
     {

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
+using System;
 
 public class Server : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class Server : MonoBehaviour
     List<Socket> _checkReadList;        //select Àü¿ë
 
     public int backlog;
+
+    public event EventHandler OnServerCreated;
 
     public IPEndPoint IPEndPoint => _localEndPoint;
     public bool IsBind => _isBind;
@@ -76,6 +79,8 @@ public class Server : MonoBehaviour
 
             _listeningSocket.Listen(backlog);
             _isListening = true;
+
+            OnServerCreated?.Invoke(this, EventArgs.Empty);
 
             _clientsSocketList.Add(_listeningSocket);
         }
