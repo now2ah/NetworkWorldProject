@@ -75,7 +75,7 @@ public class NetworkManager : MonoBehaviour
                 _clientList.Add(client);
                 client.SubscribeChatEvent(_chatManager);
                 client.Send("Client is entered chat room");
-                _chatManager.WriteMessage("Client is entered chat room");
+                //_chatManager.WriteMessage("Client is entered chat room");
             }
         }
     }
