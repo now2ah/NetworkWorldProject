@@ -174,7 +174,7 @@ public class Server : MonoBehaviour
         if (_clientsSocketList.Count > 0)
         {
             Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
-            packet.CreatePacket(message);
+            packet.CreatePacket(message, Defines.EMessageType.SEND_CHAT);
 
             foreach(var socket in _clientsSocketList)
             {

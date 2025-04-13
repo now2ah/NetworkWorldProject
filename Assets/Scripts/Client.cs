@@ -73,7 +73,7 @@ public class Client : MonoBehaviour
         if (_socket.Connected)
         {
             Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
-            packet.CreatePacket(message);
+            packet.CreatePacket(message, Defines.EMessageType.SEND_CHAT);
             _socket.Send(packet.PacketBuffer);
         }
     }
