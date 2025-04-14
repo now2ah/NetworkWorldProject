@@ -13,6 +13,8 @@ public class Server : MonoBehaviour
     bool _isBind = false;
     bool _isListening = false;
 
+    List<UserToken> _userList;
+
     List<Socket> _clientsSocketList;
     List<Socket> _checkReadList;        //select Àü¿ë
 
@@ -65,6 +67,8 @@ public class Server : MonoBehaviour
         IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
         _localIPAddress = ipHostEntry.AddressList[0];       //need to add multi address
         _localEndPoint = new IPEndPoint(IPAddress.Any, Defines.PORT);
+
+        _userList = new List<UserToken>();
 
         _clientsSocketList = new List<Socket>();
         _checkReadList = new List<Socket>();
@@ -159,6 +163,10 @@ public class Server : MonoBehaviour
 
                     if (receiveSize > 0)
                     {
+                        //under construct
+                        _HandleMessage(packet.GetPacketType(), packet);
+
+                        //old
                         string message = packet.ReadPacket();
                         OnReceiveMessage.Invoke(this, message);
                         Send(message);
@@ -167,6 +175,20 @@ public class Server : MonoBehaviour
             }
         }
         return true;
+    }
+
+    void _HandleMessage(Defines.EMessageType type, Packet packet)
+    {
+        if (type == Defines.EMessageType.CONNECT_USER)
+        {
+            UserToken userToken = new UserToken();
+            string message = packet.ReadPacket();
+            
+        }
+        else if (type == Defines.EMessageType.SEND_CHAT)
+        {
+
+        }
     }
 
     public void Send(string message)

@@ -39,6 +39,16 @@ public class Packet
         }
     }
 
+    public Defines.EMessageType GetPacketType()
+    {
+        int type = -1;
+        if (null != _packetBuffer)
+        {
+            type = BitConverter.ToInt32(_packetBuffer, Defines.PACKET_HEADER_SIZE);
+        }
+        return (Defines.EMessageType)type;
+    }
+
     public string ReadPacket()
     {
         if (null != _packetBuffer)

@@ -54,6 +54,10 @@ public class Client : MonoBehaviour
 
         if (_socket.Connected)
         {
+            //send connect
+
+
+
             OnClientConnected.Invoke(this, EventArgs.Empty);
         }
 
