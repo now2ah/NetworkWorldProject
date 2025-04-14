@@ -55,7 +55,7 @@ public class ChatManager : MonoBehaviour
     {
         if (networkManager != null && client != null)
         {
-            client.OnClientConnected += _OnClientConnected;
+            //client.OnClientConnected += _OnClientConnected;
             client.OnReceiveMessage += _OnReceiveMessage;
         }
     }

@@ -62,7 +62,7 @@ public class UIManager : MonoBehaviour
         {
             if (networkManager != null)
             {
-                networkManager.JoinRoom();
+                networkManager.JoinRoom(idInput.text, pwInput.text);
             }
         }
     }

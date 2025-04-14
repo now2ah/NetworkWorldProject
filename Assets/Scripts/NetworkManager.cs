@@ -13,8 +13,11 @@ public class NetworkManager : MonoBehaviour
     public ChatManager _chatManager;
 
     Server _server;
-    List<Client> _clientList;
+    Client _client;
     int backlog = 5;
+
+    string _id = null;
+    string _pw = null;
 
     public Server Server => _server;
 
@@ -37,19 +40,16 @@ public class NetworkManager : MonoBehaviour
     bool _isBound;
     #endregion
 
-    private void Awake()
-    {
-        _clientList = new List<Client>();
-    }
-
     public void CreateRoom()
     {
         _StartServer();
     }
 
-    public void JoinRoom()
+    public void JoinRoom(string id, string pw)
     {
-        _StartClient();
+        _id = id;
+        _pw = pw;
+        _StartClient(id);
     }
 
     void _StartServer()
@@ -63,19 +63,16 @@ public class NetworkManager : MonoBehaviour
         _server.SubscribeChatEvent(_chatManager);
     }
 
-    void _StartClient()
+    void _StartClient(string id)
     {
-        if (_clientList != null && _clientList.Count <= Defines.MAX_CONNECTED_CLIENT_SIZE)
+        if (_client != null)
         {
-            Client client = gameObject.AddComponent<Client>();
-            _uiManager.SubscribeClientEvent(client);
-            _chatManager.SubscribeClientEvent(client);
-            if (client.StartClient())
+            _client = gameObject.AddComponent<Client>();
+            _uiManager.SubscribeClientEvent(_client);
+            _chatManager.SubscribeClientEvent(_client);
+            if (_client.StartClient(id))
             {
-                _clientList.Add(client);
-                client.SubscribeChatEvent(_chatManager);
-                client.Send("Client is entered chat room");
-                //_chatManager.WriteMessage("Client is entered chat room");
+                _client.SubscribeChatEvent(_chatManager);
             }
         }
     }

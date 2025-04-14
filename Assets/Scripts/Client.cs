@@ -36,7 +36,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    public bool StartClient(string address = null)
+    public bool StartClient(string id, string address = null)
     {
         IPEndPoint endPoint = null;
         if (null == address)
@@ -55,8 +55,12 @@ public class Client : MonoBehaviour
         if (_socket.Connected)
         {
             //send connect
+            ClientConnectUser msg = new ClientConnectUser();
+            msg.id = id;
+            string serializedMsg = JsonUtility.ToJson(msg);
 
-
+            Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
+            packet.CreatePacket(serializedMsg, Defines.EMessageType.CONNECT_USER);
 
             OnClientConnected.Invoke(this, EventArgs.Empty);
         }
