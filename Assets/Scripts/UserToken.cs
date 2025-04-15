@@ -6,6 +6,6 @@ public class UserToken
     string _userID;
     Socket _userSocket;
 
-    public string ID { get { return _userID; } }
+    public string UserID { get { return _userID; } set { _userID = value; } }
     public Socket Socket { get { return _userSocket; } }
 }

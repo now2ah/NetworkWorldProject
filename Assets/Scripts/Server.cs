@@ -151,6 +151,8 @@ public class Server : MonoBehaviour
 
             foreach (var checkedSocket in _checkReadList)
             {
+                //_HandleMessage
+
                 if (checkedSocket == _listeningSocket)
                 {
                     Socket clientSocket = checkedSocket.Accept();
@@ -183,7 +185,8 @@ public class Server : MonoBehaviour
         {
             UserToken userToken = new UserToken();
             string message = packet.ReadPacket();
-            
+            ClientConnectUser json = JsonUtility.FromJson<ClientConnectUser>(message);
+            userToken.UserID = json.id;
         }
         else if (type == Defines.EMessageType.SEND_CHAT)
         {
