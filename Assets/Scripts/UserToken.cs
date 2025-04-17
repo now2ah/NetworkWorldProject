@@ -7,5 +7,5 @@ public class UserToken
     Socket _userSocket;
 
     public string UserID { get { return _userID; } set { _userID = value; } }
-    public Socket Socket { get { return _userSocket; } }
+    public Socket Socket { get { return _userSocket; } set { _userSocket = value; } }
 }

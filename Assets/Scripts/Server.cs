@@ -40,7 +40,7 @@ public class Server : MonoBehaviour
     {
         if (OnServerCreated != null)
         {
-            foreach(EventHandler invocation in OnServerCreated.GetInvocationList())
+            foreach (EventHandler invocation in OnServerCreated.GetInvocationList())
             {
                 OnServerCreated -= invocation;
             }
@@ -151,8 +151,6 @@ public class Server : MonoBehaviour
 
             foreach (var checkedSocket in _checkReadList)
             {
-                //_HandleMessage
-
                 if (checkedSocket == _listeningSocket)
                 {
                     Socket clientSocket = checkedSocket.Accept();
@@ -165,13 +163,13 @@ public class Server : MonoBehaviour
 
                     if (receiveSize > 0)
                     {
-                        //under construct
-                        _HandleMessage(packet.GetPacketType(), packet);
+                        //OnReceiveMessage.Invoke(this, message);
+                        _HandleMessage(checkedSocket, packet);
 
                         //old
-                        string message = packet.ReadPacket();
-                        OnReceiveMessage.Invoke(this, message);
-                        Send(message);
+                        //string message = packet.ReadPacket();
+                        //OnReceiveMessage.Invoke(this, message);
+                        //Send(message);
                     }
                 }
             }
@@ -179,19 +177,42 @@ public class Server : MonoBehaviour
         return true;
     }
 
-    void _HandleMessage(Defines.EMessageType type, Packet packet)
+    void _HandleMessage(Socket socket, Packet packet)
     {
+        Defines.EMessageType type = packet.GetPacketType();
+
         if (type == Defines.EMessageType.CONNECT_USER)
         {
             UserToken userToken = new UserToken();
             string message = packet.ReadPacket();
-            ClientConnectUser json = JsonUtility.FromJson<ClientConnectUser>(message);
-            userToken.UserID = json.id;
+            ClientConnectUser receiveMessage = JsonUtility.FromJson<ClientConnectUser>(message);
+            userToken.UserID = receiveMessage.id;
+            userToken.Socket = socket;
+
+            ServerConnectUser sendMessage = new ServerConnectUser();
+            sendMessage.id = userToken.UserID;
+            string sendMessageString = JsonUtility.ToJson(sendMessage);
+            _BroadcastMessage(sendMessageString, type);
         }
         else if (type == Defines.EMessageType.SEND_CHAT)
         {
 
         }
+    }
+
+    void _BroadcastMessage(string message, Defines.EMessageType type)
+    {
+        if (_clientsSocketList.Count > 0)
+        {
+            Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
+            packet.CreatePacket(message, type);
+
+            foreach (var socket in _clientsSocketList)
+            {
+                socket.Send(packet.PacketBuffer);
+            }
+        }
+
     }
 
     public void Send(string message)
@@ -201,7 +222,7 @@ public class Server : MonoBehaviour
             Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
             packet.CreatePacket(message, Defines.EMessageType.SEND_CHAT);
 
-            foreach(var socket in _clientsSocketList)
+            foreach (var socket in _clientsSocketList)
             {
                 if (socket == _listeningSocket)
                     continue;
