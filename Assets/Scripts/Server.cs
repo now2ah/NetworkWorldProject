@@ -61,19 +61,20 @@ public class Server : MonoBehaviour
         }
     }
 
-    public bool Initialize()
+    public bool Initialize(string id)
     {
         _localHostName = Dns.GetHostName();
         IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
         _localIPAddress = ipHostEntry.AddressList[0];       //need to add multi address
         _localEndPoint = new IPEndPoint(IPAddress.Any, Defines.PORT);
 
-        _userList = new List<UserToken>();
-
         _clientsSocketList = new List<Socket>();
         _checkReadList = new List<Socket>();
 
         _listeningSocket = _CreateServerSocket();
+
+        _userList = new List<UserToken>();
+        UserToken host = new UserToken(id, _listeningSocket);
 
         return _listeningSocket != null ? true : false;
     }
@@ -183,11 +184,9 @@ public class Server : MonoBehaviour
 
         if (type == Defines.EMessageType.CONNECT_USER)
         {
-            UserToken userToken = new UserToken();
             string message = packet.ReadPacket();
             ClientConnectUser receiveMessage = JsonUtility.FromJson<ClientConnectUser>(message);
-            userToken.UserID = receiveMessage.id;
-            userToken.Socket = socket;
+            UserToken userToken = new UserToken(receiveMessage.id, socket);
 
             ServerConnectUser sendMessage = new ServerConnectUser();
             sendMessage.id = userToken.UserID;

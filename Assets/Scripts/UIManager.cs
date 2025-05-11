@@ -1,10 +1,19 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager Singleton { get; private set; }
+
+    private Canvas _canvas;
+    private EventSystem _eventSystem;
+
+    [SerializeField] private GameObject _startOptionPanel;
+    [SerializeField] private GameObject _lobbyPanel;
+
     public GameObject loginPanel;
     public TMP_InputField idInput;
     public TMP_InputField pwInput;
@@ -12,6 +21,22 @@ public class UIManager : MonoBehaviour
     public NetworkManager networkManager;
 
     GameObject currentPanel;
+
+    private void Awake()
+    {
+        if (Singleton == null)
+        {
+            Singleton = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(Singleton);
+        }
+
+        _canvas = GetComponentInChildren<Canvas>();
+        _eventSystem = GetComponentInChildren<EventSystem>();
+    }
 
     private void Start()
     {
@@ -34,36 +59,6 @@ public class UIManager : MonoBehaviour
         if (networkManager != null && client != null)
         {
             client.OnClientConnected += _OnClientConnected;
-        }
-    }
-
-    public void OnStartServer()
-    {
-        if (idInput.text == null || pwInput.text == null)
-        {
-            Debug.LogError("need to input id and pw");
-        }
-        else
-        {
-            if (networkManager != null)
-            {
-                networkManager.CreateRoom();
-            }
-        }
-    }
-
-    public void OnStartClient()
-    {
-        if (idInput.text == null || pwInput.text == null)
-        {
-            Debug.LogError("need to input id and pw");
-        }
-        else
-        {
-            if (networkManager != null)
-            {
-                networkManager.JoinRoom(idInput.text, pwInput.text);
-            }
         }
     }
 

@@ -4,11 +4,30 @@ using System.Net;
 using System.Text;
 using System.Collections.Generic;
 using UnityEditor.PackageManager;
+using UnityEngine.EventSystems;
+using System;
 
 
 
 public class NetworkManager : MonoBehaviour
 {
+    public static NetworkManager Singleton { get; private set; }
+
+    public event Action OnStartNetwork;
+
+    private void Awake()
+    {
+        if (Singleton == null)
+        {
+            Singleton = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(Singleton);
+        }
+    }
+
     public UIManager _uiManager;
     public ChatManager _chatManager;
 
@@ -22,183 +41,184 @@ public class NetworkManager : MonoBehaviour
     public Server Server => _server;
 
     #region OLD Version Variables
-    public enum NetworkType
-    {
-        TCP,
-        UDP
-    }
+    //public enum NetworkType
+    //{
+    //    TCP,
+    //    UDP
+    //}
 
-    Socket _serverSocket;
-    Socket _serverListeningSocket;
+    //Socket _serverSocket;
+    //Socket _serverListeningSocket;
 
-    Socket _clientSocket;
+    //Socket _clientSocket;
 
-    string _localHostName;
-    IPAddress _ipAddress;
-    IPEndPoint _localEndPoint;
+    //string _localHostName;
+    //IPAddress _ipAddress;
+    //IPEndPoint _localEndPoint;
 
-    bool _isBound;
+    //bool _isBound;
     #endregion
 
-    public void CreateRoom()
+    public void StartServer(string id)
     {
-        _StartServer();
+        _InitializeServer(id);
     }
 
-    public void JoinRoom(string id, string pw)
+    public void StartClient(string id)
     {
-        _id = id;
-        _pw = pw;
-        _StartClient(id);
+        _InitializeClient();
     }
 
-    void _StartServer()
+    void _InitializeServer(string id)
     {
-        _server = gameObject.AddComponent<Server>();
-        _uiManager.SubscribeServerEvent();
-        _chatManager.SubscribeServerEvent();
-        _server.Initialize();
-        _server.Bind();
-        _server.Listen(backlog);
-        _server.SubscribeChatEvent(_chatManager);
+        if (null == _server)
+        {
+            _server = gameObject.AddComponent<Server>();
+            _uiManager.SubscribeServerEvent();
+            _chatManager.SubscribeServerEvent();
+            _server.Initialize(id);
+            _server.Bind();
+            _server.Listen(backlog);
+            _server.SubscribeChatEvent(_chatManager);
+            OnStartNetwork?.Invoke();
+        }
     }
 
-    void _StartClient(string id)
+    void _InitializeClient()
     {
-        if (_client != null)
+        if (_client == null)
         {
             _client = gameObject.AddComponent<Client>();
             _uiManager.SubscribeClientEvent(_client);
             _chatManager.SubscribeClientEvent(_client);
-            if (_client.StartClient(id))
+            if (_client.StartClient())
             {
                 _client.SubscribeChatEvent(_chatManager);
             }
+            OnStartNetwork?.Invoke();
         }
     }
-
-    
-
     #region OLD Version
-    public void StartServer()
-    {
-        if (InitializeServer(NetworkType.TCP) && _localEndPoint != null)
-        {
-            if (_Bind(_localEndPoint))
-            {
-                _isBound = true;
-            }
-            else
-            {
-                Debug.Log("Server socket isn't bound to local end point");
-            }
+    //    public void StartServer()
+    //    {
+    //        if (InitializeServer(NetworkType.TCP) && _localEndPoint != null)
+    //        {
+    //            if (_Bind(_localEndPoint))
+    //            {
+    //                _isBound = true;
+    //            }
+    //            else
+    //            {
+    //                Debug.Log("Server socket isn't bound to local end point");
+    //            }
 
-            try
-            {
-                _serverSocket.Listen(5);
-                Debug.Log("Server Listening...");
-            }
-            catch (SocketException e)
-            {
-                Debug.Log($"Socket Exception while in listen : {e.Message}");
-            }
+    //            try
+    //            {
+    //                _serverSocket.Listen(5);
+    //                Debug.Log("Server Listening...");
+    //            }
+    //            catch (SocketException e)
+    //            {
+    //                Debug.Log($"Socket Exception while in listen : {e.Message}");
+    //            }
 
-            if (_serverSocket != null && _isBound)
-            {
-                //while(true)
-                {
-                    _serverListeningSocket = _serverSocket.Accept();
-                    IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
-                    Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
+    //            if (_serverSocket != null && _isBound)
+    //            {
+    //                //while(true)
+    //                {
+    //                    _serverListeningSocket = _serverSocket.Accept();
+    //                    IPEndPoint clientEndpoint = _serverListeningSocket.RemoteEndPoint as IPEndPoint;
+    //                    Debug.Log($"Connected to Client({clientEndpoint.Address}, port Num ({clientEndpoint.Port})");
 
-                    byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE]; //1024
-                    int recvByteSize = _serverListeningSocket.Receive(recvBuffer);
-                    string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
+    //                    byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE]; //1024
+    //                    int recvByteSize = _serverListeningSocket.Receive(recvBuffer);
+    //                    string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
 
-                    Debug.Log($"{clientEndpoint.Address} : {recvString}");
+    //                    Debug.Log($"{clientEndpoint.Address} : {recvString}");
 
-                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Server Received your message");
-                    _serverListeningSocket.Send(sendBuffer);
+    //                    byte[] sendBuffer = Encoding.UTF8.GetBytes("Server Received your message");
+    //                    _serverListeningSocket.Send(sendBuffer);
 
-                    _serverListeningSocket.Shutdown(SocketShutdown.Both);
-                    _serverListeningSocket.Dispose();
-                }
-            }
-        }
-    }
+    //                    _serverListeningSocket.Shutdown(SocketShutdown.Both);
+    //                    _serverListeningSocket.Dispose();
+    //                }
+    //            }
+    //        }
+    //    }
 
-    public void StartClient()
-    {
-        if (InitializeClient(NetworkType.TCP) && _localEndPoint != null)
-        {
-            _clientSocket.Connect(_localEndPoint);
-            Debug.Log($"Connected to Server : {_localEndPoint.Address}, port number : {_localEndPoint.Port}");
+    //    public void StartClient()
+    //    {
+    //        if (InitializeClient(NetworkType.TCP) && _localEndPoint != null)
+    //        {
+    //            _clientSocket.Connect(_localEndPoint);
+    //            Debug.Log($"Connected to Server : {_localEndPoint.Address}, port number : {_localEndPoint.Port}");
 
-            byte[] sendBuffer = Encoding.UTF8.GetBytes("Hi! I am client.");
-            int sendByteSize = _clientSocket.Send(sendBuffer);
+    //            byte[] sendBuffer = Encoding.UTF8.GetBytes("Hi! I am client.");
+    //            int sendByteSize = _clientSocket.Send(sendBuffer);
 
-            byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE];
-            int recvByteSize = _clientSocket.Receive(recvBuffer);
-            string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
+    //            byte[] recvBuffer = new byte[Defines.MAX_MESSAGE_BUFFER_SIZE];
+    //            int recvByteSize = _clientSocket.Receive(recvBuffer);
+    //            string recvString = Encoding.UTF8.GetString(recvBuffer, 0, recvByteSize);
 
-            Debug.Log($"From Server : {recvString}");
+    //            Debug.Log($"From Server : {recvString}");
 
-            _clientSocket.Shutdown(SocketShutdown.Both);
-            _clientSocket.Close();
-        }
-    }
+    //            _clientSocket.Shutdown(SocketShutdown.Both);
+    //            _clientSocket.Close();
+    //        }
+    //    }
 
-    public bool InitializeServer(NetworkType type)
-    {
-        _localHostName = Dns.GetHostName();
-        IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
-        _ipAddress = ipHostEntry.AddressList[0];
-        _localEndPoint = new IPEndPoint(_ipAddress, 7890);
+    //    public bool InitializeServer(NetworkType type)
+    //    {
+    //        _localHostName = Dns.GetHostName();
+    //        IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
+    //        _ipAddress = ipHostEntry.AddressList[0];
+    //        _localEndPoint = new IPEndPoint(_ipAddress, 7890);
 
-        Debug.Log($"Loading local Host name and Address : {_localHostName} , {_ipAddress}");
+    //        Debug.Log($"Loading local Host name and Address : {_localHostName} , {_ipAddress}");
 
-        if (type == NetworkType.TCP)
-        {
-            _serverSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        }
-        else if (type == NetworkType.UDP)
-        {
-            _serverSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-        }
+    //        if (type == NetworkType.TCP)
+    //        {
+    //            _serverSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+    //        }
+    //        else if (type == NetworkType.UDP)
+    //        {
+    //            _serverSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+    //        }
 
-        return _serverSocket != null ? true : false;
-    }
+    //        return _serverSocket != null ? true : false;
+    //    }
 
-    public bool InitializeClient(NetworkType type)
-    {
-        _localHostName = Dns.GetHostName();
-        IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
-        _ipAddress = ipHostEntry.AddressList[0];
-        _localEndPoint = new IPEndPoint(_ipAddress, 7890);
+    //    public bool InitializeClient(NetworkType type)
+    //    {
+    //        _localHostName = Dns.GetHostName();
+    //        IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
+    //        _ipAddress = ipHostEntry.AddressList[0];
+    //        _localEndPoint = new IPEndPoint(_ipAddress, 7890);
 
-        Debug.Log($"Loading local Host name and Address : {_localHostName} , {_ipAddress}");
+    //        Debug.Log($"Loading local Host name and Address : {_localHostName} , {_ipAddress}");
 
-        if (type == NetworkType.TCP)
-        {
-            _clientSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        }
-        else if (type == NetworkType.UDP)
-        {
-            _clientSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-        }
+    //        if (type == NetworkType.TCP)
+    //        {
+    //            _clientSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+    //        }
+    //        else if (type == NetworkType.UDP)
+    //        {
+    //            _clientSocket = new Socket(_localEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+    //        }
 
-        return _clientSocket != null ? true : false;
-    }
+    //        return _clientSocket != null ? true : false;
+    //    }
 
-    bool _Bind(IPEndPoint endPoint)
-    {
-        if (_serverSocket != null)
-        {
-            _serverSocket.Bind(endPoint);
-        }
+    //    bool _Bind(IPEndPoint endPoint)
+    //    {
+    //        if (_serverSocket != null)
+    //        {
+    //            _serverSocket.Bind(endPoint);
+    //        }
 
-        return _serverSocket.IsBound == true;
-    }
+    //        return _serverSocket.IsBound == true;
+    //    }
+    #endregion
 }
 
-#endregion
+
