@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class StartOptionUI : MonoBehaviour
 {
     [SerializeField] Button _startServerButton;
     [SerializeField] Button _startClientButton;
-    [SerializeField] InputField _idInputField;
+    [SerializeField] TMP_InputField _idInputField;
 
     private void Awake()
     {

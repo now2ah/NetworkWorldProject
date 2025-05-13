@@ -14,10 +14,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _startOptionPanel;
     [SerializeField] private GameObject _lobbyPanel;
 
-    public GameObject loginPanel;
-    public TMP_InputField idInput;
-    public TMP_InputField pwInput;
-    public GameObject chatPanel;
     public NetworkManager networkManager;
 
     GameObject currentPanel;
@@ -40,9 +36,9 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        if (loginPanel != null)
+        if (_startOptionPanel != null)
         {
-            currentPanel = loginPanel;
+            currentPanel = _startOptionPanel;
         }
     }
 
@@ -64,17 +60,17 @@ public class UIManager : MonoBehaviour
 
     void _OnServerCreated(object sender, EventArgs e)
     {
-        if (chatPanel != null)
+        if (_lobbyPanel != null)
         {
-            _LoadPanel(chatPanel);
+            _LoadPanel(_lobbyPanel);
         }
     }
 
     void _OnClientConnected(object sender, EventArgs e)
     {
-        if (chatPanel != null)
+        if (_lobbyPanel != null)
         {
-            _LoadPanel(chatPanel);
+            _LoadPanel(_lobbyPanel);
         }
     }
 

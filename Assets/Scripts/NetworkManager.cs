@@ -77,9 +77,7 @@ public class NetworkManager : MonoBehaviour
             _uiManager.SubscribeServerEvent();
             _chatManager.SubscribeServerEvent();
             _server.Initialize(id);
-            _server.Bind();
-            _server.Listen(backlog);
-            _server.SubscribeChatEvent(_chatManager);
+            //_server.SubscribeChatEvent(_chatManager);
             OnStartNetwork?.Invoke();
         }
     }

@@ -61,7 +61,7 @@ public class Server : MonoBehaviour
         }
     }
 
-    public bool Initialize(string id)
+    public void Initialize(string id)
     {
         _localHostName = Dns.GetHostName();
         IPHostEntry ipHostEntry = Dns.GetHostEntry(_localHostName);
@@ -76,15 +76,11 @@ public class Server : MonoBehaviour
         _userList = new List<UserToken>();
         UserToken host = new UserToken(id, _listeningSocket);
 
-        return _listeningSocket != null ? true : false;
+        _Bind(_localEndPoint);
+        _Listen(backlog);
     }
 
-    public void Bind()
-    {
-        if (null != _localEndPoint) { _isBind = _Bind(_localEndPoint); }
-    }
-
-    public void Listen(int backlog)
+    void _Listen(int backlog)
     {
         try
         {
