@@ -248,11 +248,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _startOptionPanel: {fileID: 3021154546914580720}
   _lobbyPanel: {fileID: 5069166735675232100}
-  loginPanel: {fileID: 0}
-  idInput: {fileID: 0}
-  pwInput: {fileID: 0}
-  chatPanel: {fileID: 0}
-  networkManager: {fileID: 0}
+  _chatManager: {fileID: 6716916005494088369}
 --- !u!1 &499616392758888118
 GameObject:
   m_ObjectHideFlags: 0
@@ -1004,6 +1000,7 @@ GameObject:
   - component: {fileID: 8854751478890640141}
   - component: {fileID: 2129502049813618622}
   - component: {fileID: 161172283910057543}
+  - component: {fileID: 6716916005494088369}
   m_Layer: 0
   m_Name: ChatPanel
   m_TagString: Untagged
@@ -1070,6 +1067,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6716916005494088369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042113421345232613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42a8235252cfc134e9364050ffc8e550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  messageText: {fileID: 515818514094005277}
+  inputText: {fileID: 4833307209100160296}
+  sendButton: {fileID: 3301679134753401376}
 --- !u!1 &2203227003962992810
 GameObject:
   m_ObjectHideFlags: 0

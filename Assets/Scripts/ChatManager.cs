@@ -6,7 +6,6 @@ using UnityEngine.Events;
 
 public class ChatManager : MonoBehaviour
 {
-    public NetworkManager networkManager;
     public TextMeshProUGUI messageText;
     public TMP_InputField inputText;
     public Button sendButton;
@@ -43,19 +42,18 @@ public class ChatManager : MonoBehaviour
 
     public void SubscribeServerEvent()
     {
-        if (networkManager != null && networkManager.Server != null)
+        if (NetworkManager.Singleton.Server != null)
         {
-            networkManager.Server.OnServerCreated += _OnServerCreated;
-            networkManager.Server.OnReceiveMessage += _OnReceiveMessage;
-            networkManager.Server.OnSendMessage += _OnSendMessage;
+            NetworkManager.Singleton.Server.OnServerCreated += _OnServerCreated;
+            NetworkManager.Singleton.Server.OnReceiveMessage += _OnReceiveMessage;
+            NetworkManager.Singleton.Server.OnSendMessage += _OnSendMessage;
         }
     }
 
     public void SubscribeClientEvent(Client client)
     {
-        if (networkManager != null && client != null)
+        if (client != null)
         {
-            //client.OnClientConnected += _OnClientConnected;
             client.OnReceiveMessage += _OnReceiveMessage;
         }
     }
@@ -64,8 +62,7 @@ public class ChatManager : MonoBehaviour
     {
         if (inputText != null)
         {
-            //WriteMessage(inputText.text);
-            OnSendButtonClicked.Invoke(this, inputText.text);
+            OnSendButtonClicked?.Invoke(this, inputText.text);
             inputText.text = "";
         }
     }

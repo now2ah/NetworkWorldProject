@@ -28,9 +28,6 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    public UIManager _uiManager;
-    public ChatManager _chatManager;
-
     Server _server;
     Client _client;
     int backlog = 5;
@@ -74,10 +71,10 @@ public class NetworkManager : MonoBehaviour
         if (null == _server)
         {
             _server = gameObject.AddComponent<Server>();
-            _uiManager.SubscribeServerEvent();
-            _chatManager.SubscribeServerEvent();
+            UIManager.Singleton.SubscribeServerEvent();
+            UIManager.Singleton.ChatManager.SubscribeServerEvent();
             _server.Initialize(id);
-            //_server.SubscribeChatEvent(_chatManager);
+            _server.SubscribeChatEvent(UIManager.Singleton.ChatManager);
             OnStartNetwork?.Invoke();
         }
     }
@@ -87,12 +84,12 @@ public class NetworkManager : MonoBehaviour
         if (_client == null)
         {
             _client = gameObject.AddComponent<Client>();
-            _uiManager.SubscribeClientEvent(_client);
-            _chatManager.SubscribeClientEvent(_client);
-            if (_client.StartClient())
-            {
-                _client.SubscribeChatEvent(_chatManager);
-            }
+            //_uiManager.SubscribeClientEvent(_client);
+            //_chatManager.SubscribeClientEvent(_client);
+            //if (_client.StartClient())
+            //{
+            //    _client.SubscribeChatEvent(_chatManager);
+            //}
             OnStartNetwork?.Invoke();
         }
     }

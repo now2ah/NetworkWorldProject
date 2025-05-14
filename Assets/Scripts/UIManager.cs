@@ -14,7 +14,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _startOptionPanel;
     [SerializeField] private GameObject _lobbyPanel;
 
-    public NetworkManager networkManager;
+    [SerializeField] private ChatManager _chatManager;
+    public ChatManager ChatManager { get { return _chatManager; } private set { } }
 
     GameObject currentPanel;
 
@@ -44,15 +45,15 @@ public class UIManager : MonoBehaviour
 
     public void SubscribeServerEvent()
     {
-        if (networkManager != null && networkManager.Server != null)
+        if (NetworkManager.Singleton.Server != null)
         {
-            networkManager.Server.OnServerCreated += _OnServerCreated;
+            NetworkManager.Singleton.Server.OnServerCreated += _OnServerCreated;
         }
     }
 
     public void SubscribeClientEvent(Client client)
     {
-        if (networkManager != null && client != null)
+        if (client != null)
         {
             client.OnClientConnected += _OnClientConnected;
         }

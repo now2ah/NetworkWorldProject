@@ -80,34 +80,20 @@ public class Server : MonoBehaviour
         _Listen(backlog);
     }
 
-    void _Listen(int backlog)
-    {
-        try
-        {
-            if (null == _listeningSocket)
-            {
-                throw new System.Exception("server socket is null");
-            }
-
-            _listeningSocket.Listen(backlog);
-            _isListening = true;
-
-            OnServerCreated?.Invoke(this, EventArgs.Empty);
-
-            _clientsSocketList.Add(_listeningSocket);
-        }
-        catch (SocketException e)
-        {
-            Debug.LogError(e.Message);
-        }
-    }
-
     public void SubscribeChatEvent(ChatManager chatManager)
     {
         if (chatManager != null)
         {
             chatManager.OnSendButtonClicked += _OnSendButtonClicked;
         }
+    }
+
+    void _OnSendButtonClicked(object sender, string message)
+    {
+        ServerSendChat sendMessage = new ServerSendChat();
+        sendMessage.message = message;
+        string sendMessageString = JsonUtility.ToJson(sendMessage);
+        _BroadcastMessage(sendMessageString, Defines.EMessageType.SEND_CHAT);
     }
 
     Socket _CreateServerSocket(/*need to add TCP, UDP option*/)
@@ -134,6 +120,27 @@ public class Server : MonoBehaviour
         return _listeningSocket.IsBound;
     }
 
+    void _Listen(int backlog)
+    {
+        try
+        {
+            if (null == _listeningSocket)
+            {
+                throw new System.Exception("server socket is null");
+            }
+
+            _listeningSocket.Listen(backlog);
+            _isListening = true;
+
+            OnServerCreated?.Invoke(this, EventArgs.Empty);
+
+            _clientsSocketList.Add(_listeningSocket);
+        }
+        catch (SocketException e)
+        {
+            Debug.LogError(e.Message);
+        }
+    }
 
     bool _PollingSocketList(List<Socket> clientSocketList)
     {
@@ -160,13 +167,7 @@ public class Server : MonoBehaviour
 
                     if (receiveSize > 0)
                     {
-                        //OnReceiveMessage.Invoke(this, message);
                         _HandleMessage(checkedSocket, packet);
-
-                        //old
-                        //string message = packet.ReadPacket();
-                        //OnReceiveMessage.Invoke(this, message);
-                        //Send(message);
                     }
                 }
             }
@@ -188,10 +189,17 @@ public class Server : MonoBehaviour
             sendMessage.id = userToken.UserID;
             string sendMessageString = JsonUtility.ToJson(sendMessage);
             _BroadcastMessage(sendMessageString, type);
+            OnReceiveMessage?.Invoke(this, userToken.UserID);
         }
         else if (type == Defines.EMessageType.SEND_CHAT)
         {
-
+            string message = packet.ReadPacket();
+            ClientSendChat receiveMessage = JsonUtility.FromJson<ClientSendChat>(message);
+            
+            ServerSendChat sendMessage = new ServerSendChat();
+            sendMessage.message = receiveMessage.message;
+            string sendMessageString = JsonUtility.ToJson(sendMessage);
+            _BroadcastMessage(sendMessageString, type);
         }
     }
 
@@ -207,29 +215,5 @@ public class Server : MonoBehaviour
                 socket.Send(packet.PacketBuffer);
             }
         }
-
-    }
-
-    public void Send(string message)
-    {
-        if (_clientsSocketList.Count > 0)
-        {
-            Packet packet = new Packet(Defines.MAX_MESSAGE_BUFFER_SIZE);
-            packet.CreatePacket(message, Defines.EMessageType.SEND_CHAT);
-
-            foreach (var socket in _clientsSocketList)
-            {
-                if (socket == _listeningSocket)
-                    continue;
-
-                socket.Send(packet.PacketBuffer);
-            }
-        }
-    }
-
-    void _OnSendButtonClicked(object sender, string message)
-    {
-        Send(message);
-        OnSendMessage.Invoke(this, message);
     }
 }
